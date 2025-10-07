@@ -1,6 +1,8 @@
+// src/stores/chartStore.ts
 import { defineStore } from 'pinia';
+import axios from 'axios'; // 引入Axios
 
-// 定义视频数据类型接口（TypeScript类型约束）
+// 1. 定义基础类型（不变）
 export interface VideoItem {
   id: string;
   title: string;
@@ -11,24 +13,21 @@ export interface VideoItem {
   cover: string;
 }
 
-// 定义小时数据类型接口
 export interface HourData {
   hour: string;
   views: number;
 }
 
-// 定义Store类型（便于TypeScript类型推导）
 interface ChartState {
-  videoTop5: VideoItem[]; // 热门视频TOP5数据
-  hourlyData: HourData[]; // 小时播放量数据
-  userActivity: number;   // 用户活跃度（0-1之间）
-  isLoading: boolean;     // 加载状态
+  videoTop5: VideoItem[];
+  hourlyData: HourData[];
+  userActivity: number;
+  isLoading: boolean;
 }
 
-// 创建Pinia Store
+// 2. 创建Store（核心改造actions）
 export const useChartStore = defineStore('chart', {
   state: (): ChartState => ({
-    // 初始化数据（符合类型约束）
     videoTop5: [],
     hourlyData: [],
     userActivity: 0.68,
@@ -36,95 +35,57 @@ export const useChartStore = defineStore('chart', {
   }),
 
   actions: {
-    // 模拟获取热门视频数据（异步操作）
+    // 改造1：获取热门视频TOP5（请求Mock接口）
     async fetchVideoData() {
       this.isLoading = true;
       try {
-        // 模拟API请求延迟
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // 模拟后端返回数据（严格符合VideoItem类型）
-        const mockData: VideoItem[] = [
-          { 
-            id: '1',
-            title: 'Vue3+ECharts数据可视化实战', 
-            upName: '前端技术栈', 
-            publishTime: '2023-09-20',
-            views: 856321,
-            barrage: 12543,
-            cover: 'https://picsum.photos/300/200?random=1'
-          },
-          { 
-            id: '2',
-            title: 'TypeScript从入门到精通', 
-            upName: '编程学习营', 
-            publishTime: '2023-09-18',
-            views: 652147,
-            barrage: 8965,
-            cover: 'https://picsum.photos/300/200?random=2'
-          },
-          { 
-            id: '3',
-            title: 'B站视频数据分析方法', 
-            upName: '数据可视化达人', 
-            publishTime: '2023-09-19',
-            views: 521478,
-            barrage: 6321,
-            cover: 'https://picsum.photos/300/200?random=3'
-          },
-          { 
-            id: '4',
-            title: '前端工程化最佳实践', 
-            upName: '工程化专家', 
-            publishTime: '2023-09-17',
-            views: 412587,
-            barrage: 5689,
-            cover: 'https://picsum.photos/300/200?random=4'
-          },
-          { 
-            id: '5',
-            title: 'Pinia状态管理完全指南', 
-            upName: 'Vue技术圈', 
-            publishTime: '2023-09-16',
-            views: 325698,
-            barrage: 4125,
-            cover: 'https://picsum.photos/300/200?random=5'
-          }
-        ];
-
-        this.videoTop5 = mockData;
+        // 请求Mock接口（地址对应mockServer.js中的定义）
+        const response = await axios.get('http://localhost:3000/api/mock/video-top5');
+        // 验证接口返回格式，数据赋值（类型断言匹配VideoItem）
+        if (response.data.code === 200) {
+          this.videoTop5 = response.data.data as VideoItem[];
+        }
       } catch (error) {
         console.error('获取视频数据失败:', error);
+        this.videoTop5 = []; // 失败时清空数据
       } finally {
         this.isLoading = false;
       }
     },
 
-    // 模拟获取小时播放量数据
+    // 改造2：获取24小时播放量（请求Mock接口）
     async fetchHourlyData() {
       this.isLoading = true;
       try {
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        // 生成24小时数据（符合HourData类型）
-        const mockData: HourData[] = Array.from({ length: 24 }, (_, i) => ({
-          hour: `${i}时`,
-          views: Math.floor(Math.random() * 500) + 100 // 随机播放量
-        }));
-
-        this.hourlyData = mockData;
+        const response = await axios.get('http://localhost:3000/api/mock/hourly-data');
+        if (response.data.code === 200) {
+          this.hourlyData = response.data.data as HourData[];
+        }
       } catch (error) {
         console.error('获取小时数据失败:', error);
+        this.hourlyData = [];
       } finally {
         this.isLoading = false;
       }
     },
 
-    // 模拟更新用户活跃度
-    updateActivityRate() {
-      // 随机小幅波动（保持在0.6-0.75之间）
-      const change = (Math.random() - 0.5) * 0.02;
-      this.userActivity = Math.max(0.6, Math.min(0.75, this.userActivity + change));
+    // 改造3：获取用户活跃度（请求Mock接口，替代原来的随机波动）
+    async fetchUserActivity() {
+      try {
+        const response = await axios.get('http://localhost:3000/api/mock/user-activity');
+        if (response.data.code === 200) {
+          this.userActivity = response.data.data.rate;
+        }
+      } catch (error) {
+        console.error('获取活跃度失败:', error);
+      }
+    },
+
+    // 保留定时更新逻辑（改为定时请求接口）
+    startUpdateActivity() {
+      setInterval(() => {
+        this.fetchUserActivity(); // 定时调用接口获取最新活跃度
+      }, 5000);
     }
   }
 });

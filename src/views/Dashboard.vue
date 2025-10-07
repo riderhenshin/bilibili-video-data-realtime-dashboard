@@ -222,14 +222,13 @@ const liquidChartOption = computed(() => ({
 
 // 初始化数据
 onMounted(() => {
-  // 调用Store中的方法加载数据
+  // 1. 初始化获取数据（请求Mock接口）
   chartStore.fetchVideoData();
   chartStore.fetchHourlyData();
+  chartStore.fetchUserActivity();
 
-  // 定时更新活跃度（模拟实时数据）
-  setInterval(() => {
-    chartStore.updateActivityRate();
-  }, 5000);
+  // 2. 启动活跃度定时更新（每5秒请求一次接口）
+  chartStore.startUpdateActivity();
 });
 
 // 监听视频数据变化（可选，用于调试）

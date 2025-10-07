@@ -7,7 +7,7 @@ const port = 3000;
 
 // 1. 配置跨域（允许前端地址访问，假设前端运行在 8080 端口）
 app.use(cors({
-  origin: 'http://localhost:8080', // 替换为你的前端项目地址（如 Vite 默认是 5173）
+  origin: 'http://localhost:5173', // 替换为你的前端项目地址（如 Vite 默认是 5173）
   methods: ['GET'],
   credentials: true
 }));
