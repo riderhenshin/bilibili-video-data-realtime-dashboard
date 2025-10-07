@@ -7,35 +7,64 @@
     <body>
       <el-row :gutter="20" class="data-card">
       <!-- 4个卡片平均分配24份栅格，每列占6份 -->
-      <el-col :span="8">
+      <el-col :span="6">
         <statisticCard 
-          :iconComponent="User"
-          iconBgColor="#2d8cf0"
-          numColor="#2d8cf0"
-          :statNum="6666"
-          cardTitle="用户访问量"
+          :icon-component="VideoPlay"
+          icon-bg-color="#FB7299"
+          num-color="#FB7299"
+          :stat-num="125.8"
+          suffix="万"
+          :decimal-places="1"
+          cardTitle="实时播放量"
+          :show-growth="true"
+          :growth-type="Top"
+          :growth-rate="5.2"
            />
       </el-col>
 
-      <el-col :span="8">
+      <el-col :span="6">
         <statisticCard 
-          :iconComponent="ChatDotRound"
-          iconBgColor="#64d572"
-          numColor="#64d572"
-          :statNum="168"
-          cardTitle="系统消息"
+          :icon-component="ChatDotRound"
+          icon-bg-color="#00A1D6"
+          num-color="#00A1D6"
+          :stat-num="3.6"
+          suffix="万"
+          :decimal-places="1"
+          cardTitle="实时弹幕数"
+          :show-growth="true"
+          :growth-type="Top"
+          :growth-rate="8.7"
            />
       </el-col>
 
-      <el-col :span="8">
+      <el-col :span="6">
         <statisticCard 
-          :iconComponent="Goods"
-          iconBgColor="#f25e43"
-          numColor="#f25e43"
-          :statNum="8888"
-          cardTitle="商品数量"
+          :icon-component="Upload"
+          icon-bg-color="#f56c6c"
+          num-color="#f56c6c"
+          :stat-num="8923"
+          suffix="个"
+          :decimal-places="0"
+          cardTitle="日投稿视频量"
+          :show-growth="true"
+          :growth-type="Bottom"
+          :growth-rate="2.3"
            />
       </el-col>
+
+      <el-col :span="6">
+        <statisticCard 
+          :icon-component="User"
+          icon-bg-color="#67c23a"
+          num-color="#67c23a"
+          :stat-num="68.5"
+          suffix="%"
+          :decimal-places="1"
+          cardTitle="用户活跃度"
+           />
+      </el-col>
+
+
 
     </el-row>  
     </body>
@@ -102,8 +131,7 @@
 import {ref,onMounted,watch,computed} from 'vue'
 import BiliHeader from '@/components/BiliHeader.vue';
 import StatisticCard from '@/components/Statistic-card.vue';
-import { User,ChatDotRound,Goods } from '@element-plus/icons-vue';
-
+import { User,ChatDotRound,Goods, VideoPlay,Top, Bottom, Upload } from '@element-plus/icons-vue';
 import VChart from 'vue-echarts'
 import {use} from 'echarts/core'
 import {LineChart, BarChart} from 'echarts/charts'
@@ -244,7 +272,7 @@ watch(
 
 <style>
 .data-card{
-  margin-bottom: 20px;
+  margin: 24px 0;
 }
 
 .chart1{
