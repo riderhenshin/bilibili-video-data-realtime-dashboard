@@ -53,7 +53,7 @@
             <el-card shadow="hover" >
               <div class="card-header">
                 <p class="card-header-title" >热门视频 TOP5</p>
-                <p class="card-header-desc">热门视频 TOP5</p>
+                <p class="card-header-desc">近1小时播放量排名</p>
               </div>
               <v-chart class="chart2" :option="barChartOption"  @click="handleBarClick"/>
             </el-card>
@@ -63,7 +63,7 @@
             <el-card shadow="hover" >
               <div class="card-header">
                 <p class="card-header-title" >用户活跃度</p>
-                <p class="card-header-desc">用户活跃度</p>
+                <p class="card-header-desc">实时在线用户占比</p>
               </div>
               <v-chart class="chart3" :option="liquidChartOption" />
             </el-card>
@@ -79,18 +79,19 @@
         :close-on-click-modal="true"  
       >
       
-        <div class="video-detail-content">
-          <img 
-            :src="selectedVideo.cover" 
-            alt="视频封面" 
-            class="video-cover"
-          >
-          <h3 class="video-title">{{ selectedVideo.title }}</h3>
-          <p><span class="label">UP主：</span>{{ selectedVideo.upName }}</p>
-          <p><span class="label">发布时间：</span>{{ selectedVideo.publishTime }}</p>
-          <p><span class="label">播放量：</span>{{ formatNumber(selectedVideo.views) }}</p>
-          <p><span class="label">弹幕数：</span>{{ formatNumber(selectedVideo.barrage) }}</p>
-        </div>
+      <!-- 只有当selectedVideo存在时才渲染内容 -->
+      <div class="video-detail-content" v-if="selectedVideo">
+        <img 
+          :src="selectedVideo.cover" 
+          alt="视频封面" 
+          class="video-cover"
+        >
+        <h3 class="video-title">{{ selectedVideo.title }}</h3>
+        <p><span class="label">UP主：</span>{{ selectedVideo.upName }}</p>
+        <p><span class="label">发布时间：</span>{{ selectedVideo.publishTime }}</p>
+        <p><span class="label">播放量：</span>{{ formatNumber(selectedVideo.views) }}</p>
+        <p><span class="label">弹幕数：</span>{{ formatNumber(selectedVideo.barrage) }}</p>
+      </div>
       </el-dialog>
 
     </footer>
@@ -98,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref,onMounted,watch,computed} from 'vue'
 import BiliHeader from '@/components/BiliHeader.vue';
 import StatisticCard from '@/components/Statistic-card.vue';
 import { User,ChatDotRound,Goods } from '@element-plus/icons-vue';
@@ -106,6 +107,7 @@ import { User,ChatDotRound,Goods } from '@element-plus/icons-vue';
 import VChart from 'vue-echarts'
 import {use} from 'echarts/core'
 import {LineChart, BarChart} from 'echarts/charts'
+import type {EChartsOption} from 'echarts'
 import { GridComponent, TooltipComponent,DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
@@ -115,6 +117,7 @@ import { useChartStore } from '@/stores/chartStore';
 
 import { graphic } from 'echarts/core';
 
+import type { VideoItem } from '@/stores/chartStore';
 
 use([
   LineChart,BarChart,
@@ -122,127 +125,75 @@ use([
   CanvasRenderer
 ])
 
-// 组件内直接管理数据（不使用store）
-const hourlyData = ref([
-  { hour: '0', views: 120 }, { hour: '1', views: 80 },
-  { hour: '2', views: 50 }, { hour: '3', views: 30 },
-  { hour: '4', views: 20 }, { hour: '5', views: 40 },
-  { hour: '6', views: 90 }, { hour: '7', views: 150 },
-  { hour: '8', views: 220 }, { hour: '9', views: 280 },
-  { hour: '10', views: 320 }, { hour: '11', views: 350 },
-  { hour: '12', views: 420 }, { hour: '13', views: 390 },
-  { hour: '14', views: 360 }, { hour: '15', views: 400 },
-  { hour: '16', views: 480 }, { hour: '17', views: 550 },
-  { hour: '18', views: 620 }, { hour: '19', views: 700 },
-  { hour: '20', views: 680 }, { hour: '21', views: 600 },
-  { hour: '22', views: 450 }, { hour: '23', views: 280 }
-]);
 
-const videoTop5 = ref([
-  { 
-    title: 'Vue3+ECharts数据可视化实战', 
-    upName: '前端技术栈', 
-    publishTime: '2023-09-20',
-    views: 856321,
-    barrage: 12543,
-    cover: 'https://picsum.photos/300/200?random=1'
-  },
-  { 
-    title: 'TypeScript从入门到精通', 
-    upName: '编程学习营', 
-    publishTime: '2023-09-18',
-    views: 652147,
-    barrage: 8965,
-    cover: 'https://picsum.photos/300/200?random=2'
-  },
-  { 
-    title: 'B站视频数据分析方法', 
-    upName: '数据可视化达人', 
-    publishTime: '2023-09-19',
-    views: 521478,
-    barrage: 6321,
-    cover: 'https://picsum.photos/300/200?random=3'
-  },
-  { 
-    title: '前端工程化最佳实践', 
-    upName: '工程化专家', 
-    publishTime: '2023-09-17',
-    views: 412587,
-    barrage: 5689,
-    cover: 'https://picsum.photos/300/200?random=4'
-  },
-  { 
-    title: 'Pinia状态管理完全指南', 
-    upName: 'Vue技术圈', 
-    publishTime: '2023-09-16',
-    views: 325698,
-    barrage: 4125,
-    cover: 'https://picsum.photos/300/200?random=5'
-  }
-]);
 
-const userActivityRate = ref(0.68);
-const showVideoDetail = ref(false);
+// 初始化Store
+const chartStore = useChartStore();
 
-// 弹窗控制变量
+// 弹窗状态
 const dialogVisible = ref(false);
-const selectedVideo = ref<any>({});
+const selectedVideo = ref<VideoItem | null>(null); // 严格指定类型
 
-// 处理柱状图点击事件
+// 处理柱状图点击
+// 处理柱状图点击（彻底修复类型错误）
 const handleBarClick = (params: any) => {
-  // 只处理系列数据点击
-  if (params.componentType === 'series') {
-    // 根据点击索引获取对应视频数据
-    selectedVideo.value = videoTop5.value[params.dataIndex];
-    // 显示弹窗
+  // 1. 先验证参数基础有效性
+  if (params.componentType !== 'series' || typeof params.dataIndex !== 'number') {
+    selectedVideo.value = null;
+    dialogVisible.value = false;
+    return;
+  }
+
+  // 2. 显式获取元素并判断是否存在
+  const videoItem = chartStore.videoTop5[params.dataIndex];
+  if (videoItem) {
+    // 确认元素存在后再赋值（此时TypeScript能确定类型为VideoItem）
+    selectedVideo.value = videoItem;
     dialogVisible.value = true;
+  } else {
+    // 元素不存在时的安全处理
+    selectedVideo.value = null;
+    dialogVisible.value = false;
   }
 };
 
-// 格式化数字（添加千位分隔符）
-const formatNumber = (num: number) => {
+// 格式化数字
+const formatNumber = (num: number): string => {
   return num.toLocaleString('zh-CN');
 };
 
-// 折线图配置
-const lineChartOption = ref({
-  tooltip: {
-    trigger: 'axis',
-    formatter: (params: any) => {
-       // 格式化提示框内容，params为当前鼠标指向的数据信息数组
-      const param = params[0];
-      const prev = param.dataIndex > 0 ? (hourlyData.value[param.dataIndex - 1]?.views ?? 0) : 0;
-      const rate = ((param.value - prev) / prev * 100).toFixed(1);
-      return `${param.name}时<br>播放量: ${param.value}万<br>环比: ${rate}%`;
-    }
-  },
+// 折线图配置（基于Store数据动态生成）
+const lineChartOption = computed(() => ({
+  tooltip: { trigger: 'axis' },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', data: hourlyData.value.map(item => item.hour) },
+  xAxis: { 
+    type: 'category',
+    data: chartStore.hourlyData.map(item => item.hour)
+  },
   yAxis: { type: 'value', name: '万' },
   dataZoom: [{ type: 'inside' }],
   series: [{
     type: 'line',
-    data: hourlyData.value.map(item => item.views),
-    lineStyle: { color: '#FB7299' },
-    animationDuration: 1500
+    data: chartStore.hourlyData.map(item => item.views),
+    lineStyle: { color: '#FB7299' }
   }]
-});
+}));
 
 // 柱状图配置
-const barChartOption = ref({
+const barChartOption = computed(() => ({
   tooltip: { trigger: 'axis' },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
   xAxis: { 
     type: 'category',
     axisLabel: {
-      formatter: (value: string) => value.length > 8 ? value.slice(0, 8) + '...' : value
+      formatter: (value: string) => value.length > 8 ? `${value.slice(0, 8)}...` : value
     },
-    data: videoTop5.value.map(item => item.title)
+    data: chartStore.videoTop5.map(item => item.title)
   },
   yAxis: { type: 'value' },
   series: [{
     type: 'bar',
-    data: videoTop5.value.map(item => item.views),
+    data: chartStore.videoTop5.map(item => item.views),
     itemStyle: {
       color: {
         type: 'linear',
@@ -250,28 +201,45 @@ const barChartOption = ref({
         colorStops: [{ offset: 0, color: '#FB7299' }, { offset: 1, color: '#FF9EBC' }]
       }
     },
-    label: { show: true, position: 'top' },
-    animationDuration: 1500
+    label: { show: true, position: 'top' }
   }]
-});
+}));
 
 // 水波纹图配置
-const liquidChartOption = ref({
+const liquidChartOption = computed(() => ({
   series: [{
     type: 'liquidFill',
-    data: [userActivityRate.value, userActivityRate.value - 0.03],
+    data: [chartStore.userActivity, chartStore.userActivity - 0.03],
     radius: '85%',
     color: ['rgba(251, 114, 153, 0.7)'],
     label: {
-      formatter: `${(userActivityRate.value * 100).toFixed(0)}%`,
+      formatter: `${(chartStore.userActivity * 100).toFixed(0)}%`,
       fontSize: 36,
       color: '#FB7299'
-    },
-    waveAnimation: true
+    }
   }]
+}));
+
+// 初始化数据
+onMounted(() => {
+  // 调用Store中的方法加载数据
+  chartStore.fetchVideoData();
+  chartStore.fetchHourlyData();
+
+  // 定时更新活跃度（模拟实时数据）
+  setInterval(() => {
+    chartStore.updateActivityRate();
+  }, 5000);
 });
 
-
+// 监听视频数据变化（可选，用于调试）
+watch(
+  () => chartStore.videoTop5,
+  (newVal) => {
+    console.log('视频数据更新:', newVal);
+  },
+  { deep: true }
+);
 
 </script>
 
