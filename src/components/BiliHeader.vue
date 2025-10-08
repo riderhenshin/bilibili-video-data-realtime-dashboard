@@ -49,12 +49,15 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElButton, ElIcon } from 'element-plus';
 import { Refresh, Setting, Timer } from '@element-plus/icons-vue';
+import { useChartStore } from '@/stores/chartStore';
 
 // 1. 响应式状态：解决“静态数据”问题
 const updateTime = ref(''); // 实时更新的时间
 const isRefreshing = ref(false); // 刷新按钮加载状态
 const router = useRouter();
 let timeTimer: number | null = null; // 定时器实例，用于销毁
+
+const chartStore = useChartStore()
 
 // 2. 时间格式化：统一格式为“YYYY-MM-DD HH:mm:ss”
 const formatTime = () => {
@@ -69,14 +72,24 @@ const formatTime = () => {
   }).replace(/\//g, '-'); // 把“/”替换为“-”，更符合习惯
 };
 
-// 3. 刷新按钮逻辑：模拟加载状态
-const handleRefresh = () => {
+// 3. 刷新按钮
+const handleRefresh = async () => {
   if (isRefreshing.value) return; // 防止重复点击
   isRefreshing.value = true;
-  // 模拟接口请求延迟（1.5秒）
-  setTimeout(() => {
+  try{
+    // 1. 重新获取所有核心数据
+    await chartStore.fetchAllData();
+    
+    // 2. 同时刷新用户活跃度
+    await chartStore.fetchUserActivity();
+    
+    // 可以在这里添加刷新成功的提示
+    console.log('数据已成功刷新');
+  }catch(error){
+  console.error('数据刷新失败：',error);
+  } finally {
     isRefreshing.value = false;
-  }, 1500);
+  }
 };
 
 // 4. 跳转设置页
@@ -177,20 +190,4 @@ onUnmounted(() => {
   transform: scale(1.05); /*  hover时放大5% */
 }
 
-
-/* 响应式适配：移动端隐藏“自动更新中”文字，节省空间 */
-@media (max-width: 768px) {
-  .header-bar {
-    padding: 0 16px;
-  }
-  .main-title {
-    font-size: 18px;
-  }
-  .auto-text {
-    display: none; /* 隐藏次要文字 */
-  }
-  .refresh-rate {
-    font-size: 12px;
-  }
-}
 </style>

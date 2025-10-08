@@ -96,14 +96,14 @@
 
         <!-- 第二列：中国地图（核心突出） -->
         <el-col :span="10" class="chart-col">
-          <el-card shadow="hover" class="chart-card map-card">
+          <el-card shadow="hover" class="chart-card">
             <div class="card-header">
               <p class="card-header-title">用户地域分布</p>
               <p class="card-header-desc">
                 <el-select 
                   v-model="selectedMapCategory" 
                   placeholder="选择分区" 
-                  size="mini"
+                  size="default"
                   @change="handleMapCategoryChange"
                 >
                   <el-option label="全部分区" value="" />
@@ -117,41 +117,6 @@
             </div>
             <div class="map-container">
               <v-chart class="map-chart" :option="mapChartOption" @click="handleMapClick" />
-              <!-- 地图点击弹窗：B站特色面板 -->
-              <el-popover
-                v-model:visible="mapPopoverVisible"
-                :width="300"
-                trigger="manual"
-                placement="right"
-              >
-                <div class="map-popover">
-                  <div class="province-header">
-                    <span class="province-name">{{ currentProvince }}</span>
-                    <span class="region-tag" v-if="regionTag">{{ regionTag }}</span>
-                  </div>
-                  <div class="province-stats">
-                    <div class="stat-item">
-                      <span class="stat-label">用户占比</span>
-                      <span class="stat-value">{{ provinceStats.userRatio }}%</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-label">投稿量</span>
-                      <span class="stat-value">{{ formatNumber(provinceStats.uploadCount) }}</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-label">弹幕量</span>
-                      <span class="stat-value">{{ formatNumber(provinceStats.barrageCount) }}</span>
-                    </div>
-                  </div>
-                  <div class="top-video">
-                    <p class="top-title">TOP1 视频</p>
-                    <div class="video-preview" v-if="provinceTopVideo">
-                      <img :src="provinceTopVideo.cover" alt="视频封面" class="video-cover">
-                      <p class="video-title">{{ provinceTopVideo.title.slice(0, 15) }}...</p>
-                    </div>
-                  </div>
-                </div>
-              </el-popover>
             </div>
           </el-card>
         </el-col>
@@ -182,7 +147,7 @@
       <el-dialog 
         v-model="dialogVisible" 
         title="视频详情" 
-        :width="300"
+        :width="400"
         :close-on-click-modal="true"
       >
         <div class="video-detail-content" v-if="selectedVideo">
@@ -286,6 +251,9 @@ const handleMapCategoryChange = () => {
 
 // 4. 柱状图点击：显示视频详情
 const handleBarClick = (params: any) => {
+//   params: any 是 ECharts 图表点击事件返回的参数对象，包含点击位置、数据索引等信息。
+// params.componentType === 'series' 用于判断点击的是否是图表中的数据系列（例如柱状图的柱子），排除点击空白区域或坐标轴等情况。
+// typeof params.dataIndex === 'number' 确保点击的数据项有有效的索引值（避免无效点击）。
   if (params.componentType === 'series' && typeof params.dataIndex === 'number') {
     const filteredVideos = getFilteredVideos();
     const video = filteredVideos[params.dataIndex];
@@ -432,16 +400,6 @@ const mapChartOption = computed((): EChartsOption => ({
     data: getMapDataByCategory(),
     label: { show: true, fontSize: 10 },
     itemStyle: { areaColor: '#f5f5f5', borderColor: '#fff' },
-    // 叠加B站小电视图标（核心省份）
-    markPoint: {
-      symbol: 'image://https://picsum.photos/30/30', // 替换为B站小电视图标
-      symbolSize: 30,
-      data: [
-        { name: '广东', value: '热门', xAxis: 125, yAxis: 25 },
-        { name: '浙江', value: '热门', xAxis: 118, yAxis: 30 },
-        { name: '上海', value: '热门', xAxis: 121, yAxis: 31 }
-      ]
-    }
   }]
 }));
 
@@ -454,19 +412,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-container {
-  padding: 20px;
-}
-
-/* 三列栅格布局 */
-.chart-row {
-  margin-top: 24px;
-}
-.chart-col {
-  display: flex;
-  flex-direction: column;
-  gap: 24px; /* 列内图表间距 */
-}
 
 /* 统一图表卡片样式 */
 .chart-card {
@@ -477,23 +422,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
 }
-.card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f5f5f5;
-}
+
 .card-header-title {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
   color: #333;
+  padding-bottom: 10px ;
 }
 .card-header-desc {
   font-size: 12px;
   color: #999;
   margin: 4px 0 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .category-tag {
   font-size: 12px;
@@ -509,9 +449,7 @@ onMounted(() => {
   flex: 1; /* 图表高度填满卡片剩余空间 */
   min-height: 200px;
 }
-.map-card {
-  height: 100%; /* 地图卡片占满列高 */
-}
+
 .map-container {
   position: relative;
   flex: 1;
@@ -523,72 +461,6 @@ onMounted(() => {
   min-height: 500px;
 }
 
-/* 地图弹窗样式 */
-.map-popover {
-  padding: 12px;
-}
-.province-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.province-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-.region-tag {
-  font-size: 12px;
-  background: rgba(251, 114, 153, 0.1);
-  color: #FB7299;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-.province-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f5f5f5;
-}
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-}
-.stat-label {
-  color: #999;
-  font-size: 13px;
-}
-.stat-value {
-  font-weight: 600;
-  color: #333;
-}
-.top-title {
-  font-size: 14px;
-  margin: 0 0 8px 0;
-  color: #666;
-}
-.video-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.video-cover {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-.video-title {
-  font-size: 13px;
-  margin: 0;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* 视频详情弹窗 */
 .video-detail-content {
@@ -606,26 +478,5 @@ onMounted(() => {
 }
 .label {
   color: #999;
-}
-
-/* 响应式适配 */
-@media (max-width: 1200px) {
-  .el-col {
-    /* 中等屏幕：第一列6 → 8，第二列10 → 16，第三列8 → 24（换行） */
-    &:nth-child(1) { flex: 0 0 calc(100% * 8 / 24) !important; }
-    &:nth-child(2) { flex: 0 0 calc(100% * 16 / 24) !important; }
-    &:nth-child(3) { flex: 0 0 100% !important; margin-top: 24px; }
-  }
-}
-@media (max-width: 768px) {
-  .el-col {
-    /* 小屏幕：所有列占满宽度，垂直堆叠 */
-    flex: 0 0 100% !important;
-    margin-top: 0 !important;
-    margin-bottom: 24px !important;
-  }
-  .map-chart {
-    min-height: 350px;
-  }
 }
 </style>
