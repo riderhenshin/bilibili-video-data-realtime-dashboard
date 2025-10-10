@@ -67,10 +67,10 @@ export const useChartStore = defineStore('chart', {
           categoryRes, 
           provinceRes
         ] = await Promise.all([
-          axios.get('http://localhost:3000/api/mock/video-top5'),
-          axios.get('http://localhost:3000/api/mock/hourly-data'),
-          axios.get('http://localhost:3000/api/mock/category-data'),
-          axios.get('http://localhost:3000/api/mock/province-data')
+          axios.get('/api/mock/video-top5'),
+          axios.get('/api/mock/hourly-data'),
+          axios.get('/api/mock/category-data'),
+          axios.get('/api/mock/province-data')
         ]);
 
         // 赋值数据（严格类型断言）

@@ -10,6 +10,15 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base:'/bilibili-video-data-realtime-dashboard',
+  server:{
+    proxy:{
+      '/api':{
+        target:'http://localhost:3000',
+        changeOrigin:true,
+      }
+    }
+  },
   plugins: [
     vue(),
     vueDevTools(),
