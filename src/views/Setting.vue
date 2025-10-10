@@ -30,11 +30,11 @@
             placeholder="选择刷新间隔"
             style="width: 200px"
           >
-            <el-option label="10秒" value="10" />
-            <el-option label="30秒" value="30" />
-            <el-option label="1分钟" value="60" />
-            <el-option label="5分钟" value="300" />
-            <el-option label="关闭自动刷新" value="0" />
+            <el-option label="10秒" :value="10" />
+            <el-option label="30秒" :value="30" />
+            <el-option label="1分钟" :value="60" />
+            <el-option label="5分钟" :value="300" />
+            <el-option label="关闭自动刷新" :value="0" />
           </el-select>
           <span class="form-hint">（设置为0将关闭dashboard自动刷新）</span>
         </el-form-item>
@@ -63,11 +63,11 @@
         <el-form-item label="界面主题">
           <el-radio-group 
             v-model="form.theme" 
-            style="display: flex; gap: 20px"
+
           >
             <el-radio 
               label="light" 
-              border 
+              border
               style="padding: 8px 20px"
             >
               浅色主题

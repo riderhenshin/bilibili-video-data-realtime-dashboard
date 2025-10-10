@@ -94,7 +94,7 @@ const handleRefresh = async () => {
 
 // 4. 跳转设置页
 const handleGoSettings = () => {
-  router.push('/settings');
+  router.push('/setting');
 };
 
 // 5. 实时更新时间：组件挂载时启动定时器，销毁时清除

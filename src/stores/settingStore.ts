@@ -24,6 +24,7 @@ export const useSettingStore = defineStore('setting', {
 
   actions: {
     // 保存设置（同步到localStorage）
+    // 在 TypeScript 中，Partial<T> 是一个内置的泛型工具类型，它的作用是将类型 T 中的所有属性转换为可选属性（即每个属性都可以传或不传）。
     saveSetting(newSetting: Partial<SettingState>) {
       // 合并新配置到当前状态
       Object.assign(this.$state, newSetting);
