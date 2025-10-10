@@ -9,6 +9,10 @@ const router = createRouter({
       component: Dashboard,
     },
     {
+      path: '/dashboard',
+      component: Dashboard,
+    },
+    {
       path: '/setting',
       component: Setting
     },
