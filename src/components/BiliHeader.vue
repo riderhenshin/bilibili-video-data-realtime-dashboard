@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElButton, ElIcon } from 'element-plus';
+import { ElButton, ElIcon, ElMessage } from 'element-plus';
 import { Refresh, Setting, Timer } from '@element-plus/icons-vue';
 import { useChartStore } from '@/stores/chartStore';
 
@@ -73,18 +73,40 @@ const formatTime = () => {
 };
 
 // 3. 刷新按钮
+// 为了避免加载太快，添加一个最小延迟时间来确保加载状态至少显示一段时间
+// 即使数据请求快速完成。这样既能保持真实的加载状态，又能让用户清晰感知到刷新操作正在进行。
 const handleRefresh = async () => {
   if (isRefreshing.value) return; // 防止重复点击
+
+    // 定义最小加载时间（毫秒），可根据需要调整
+  const MIN_LOADING_TIME = 500;
+  console.log(`最小加载时间：${MIN_LOADING_TIME}ms`)
+  const startTime = Date.now();
+
   isRefreshing.value = true;
   try{
+        // 1. 并行获取数据（如果接口之间无依赖）
+    await Promise.all([
+      chartStore.fetchAllData(),
+      chartStore.fetchUserActivity()
+    ]);
     // 1. 重新获取所有核心数据
-    await chartStore.fetchAllData();
+    // await chartStore.fetchAllData();
     
     // 2. 同时刷新用户活跃度
-    await chartStore.fetchUserActivity();
+    // await chartStore.fetchUserActivity();
     
-    // 可以在这里添加刷新成功的提示
-    console.log('数据已成功刷新');
+    // 2. 计算需要补充的延迟时间
+    const elapsedTime = Date.now() - startTime;
+    console.log(`实际重新获取数据所耗时间：${elapsedTime}ms`)
+    const delayTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+    
+    // 3. 如果实际请求时间短于最小加载时间，则补充延迟
+    if (delayTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayTime));
+    }
+    
+    ElMessage.success('数据已成功刷新');
   }catch(error){
   console.error('数据刷新失败：',error);
   } finally {
