@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import {
+  getVideoTop5,
+  getHourlyData,
+  getUserActivity,
+  getCategoryData,
+  getProvinceData,
+} from '@/api/chartApi';
 
 // 视频数据类型（新增分区字段）
 export interface VideoItem {
@@ -61,23 +68,19 @@ export const useChartStore = defineStore('chart', {
       this.isLoading = true;
       try {
         // 并行请求多个接口（优化性能）
-        const [
-          videoRes, 
-          hourlyRes, 
-          categoryRes, 
-          provinceRes
-        ] = await Promise.all([
-          axios.get(`${import.meta.env.BASE_URL}api/mock/video-top5.json`),
-          axios.get(`${import.meta.env.BASE_URL}api/mock/hourly-data.json`),
-          axios.get(`${import.meta.env.BASE_URL}api/mock/category-data.json`),
-          axios.get(`${import.meta.env.BASE_URL}api/mock/province-data.json`)
+        // 调用封装的接口函数（无需再处理 response.data.data，拦截器已返回核心数据）
+        const [videoList, hourList, categoryList, provinceList] = await Promise.all([
+          getVideoTop5(),
+          getHourlyData(),
+          getCategoryData(),
+          getProvinceData(),
         ]);
 
-        // 赋值数据（严格类型断言）
-        this.videoTop5 = videoRes.data.data as VideoItem[];
-        this.hourlyData = hourlyRes.data.data as HourData[];
-        this.categoryData = categoryRes.data.data as CategoryData[];
-        this.provinceData = provinceRes.data.data as ProvinceData[];
+        // 直接赋值（TS 类型已约束，无需断言）
+        this.videoTop5 = videoList;
+        this.hourlyData = hourList;
+        this.categoryData = categoryList;
+        this.provinceData = provinceList;
       } catch (error) {
         console.error('数据请求失败:', error);
         this.loadFallbackData(); // 加载备用数据
@@ -89,8 +92,8 @@ export const useChartStore = defineStore('chart', {
     // 获取用户活跃度
     async fetchUserActivity() {
       try {
-        const res = await axios.get('http://localhost:3000/api/mock/user-activity');
-        this.userActivity = res.data.data.rate;
+        const { rate } = await getUserActivity(); // 直接获取 rate
+        this.userActivity = rate;
       } catch (error) {
         console.error('获取活跃度失败:', error);
         this.userActivity = 0.65 + Math.random() * 0.1; // 随机模拟
