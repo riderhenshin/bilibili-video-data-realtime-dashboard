@@ -1,6 +1,6 @@
 <template>
     <header>
-    <bili-header />
+      <MyHeader />
     </header>
 
 
@@ -182,6 +182,8 @@ import { useChartStore } from '@/stores/chartStore';
 import { graphic } from 'echarts/core';
 
 import type { VideoItem, ProvinceData, CategoryData } from '@/stores/chartStore';
+import MyHeader from '@/components/MyHeader.vue';
+
 
 use([
   LineChart,BarChart,PieChart,MapChart,
