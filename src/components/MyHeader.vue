@@ -58,8 +58,8 @@ const currentTheme = ref<'light' | 'dark'>(themeStore.currentTheme)
 // 主题切换
 const toggleTheme = (theme: 'light' | 'dark') => {
   themeStore.setTheme(theme);
-  currentTheme.value = theme;
-  applyTheme(theme);
+  // currentTheme.value = theme;
+  // applyTheme(theme);
   ElMessage.success(`已切换至${theme === 'light' ? '浅色' : '深色'}主题`);
 };
 
@@ -174,25 +174,25 @@ onUnmounted(() => {
   font-weight: 700;
 }
 .highlight{
-  color:#FB7299;
+  color:var(--highlight-color);
 }
 .update-info{
   display: flex;
   align-items: center;
   padding: 5px 0 0 0;
-  color: #666;
+  color: var(--secondary-text);
   gap: 8px;
 }
 .auto-text {
   font-size: 12px;
-  color: #999;
+  color: var(--secondary-text);
 }
 /* 自动更新指示器：粉色小圆点，闪烁动画 */
 .auto-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #FB7299;
+  background-color: var(--highlight-color);
   opacity: 0.5;
   animation: blink 1.2s infinite alternate
 }

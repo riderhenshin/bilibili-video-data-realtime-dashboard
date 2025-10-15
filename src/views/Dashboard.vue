@@ -78,7 +78,7 @@
               <p class="card-header-title">日播放量趋势图</p>
               <p class="card-header-desc">近24小时数据</p>
             </div>
-            <v-chart class="chart" :option="lineChartOption" />
+            <v-chart class="chart" :option="lineChartOption" :theme="currentTheme" :key="currentTheme"/>
           </el-card>
 
           <!-- 热门视频TOP5 -->
@@ -90,7 +90,7 @@
               </p>
               <p class="card-header-desc">近1小时播放量</p>
             </div>
-            <v-chart class="chart" :option="barChartOption" @click="handleBarClick" />
+            <v-chart class="chart" :option="barChartOption" @click="handleBarClick" :theme="currentTheme" :key="currentTheme"/>
           </el-card>
         </el-col>
 
@@ -99,24 +99,24 @@
           <el-card shadow="hover" class="chart-card">
             <div class="card-header">
               <p class="card-header-title">用户地域分布</p>
-              <p class="card-header-desc">
-                <el-select 
-                  v-model="selectedMapCategory" 
-                  placeholder="选择分区" 
-                  size="default"
-                  @change="handleMapCategoryChange"
-                >
-                  <el-option label="全部分区" value="" />
-                  <el-option label="生活区" value="生活" />
-                  <el-option label="游戏区" value="游戏" />
-                  <el-option label="知识区" value="知识" />
-                  <el-option label="动漫区" value="动漫" />
-                  <el-option label="科技区" value="科技" />
-                </el-select>
-              </p>
+              <el-select 
+                v-model="selectedMapCategory" 
+                placeholder="选择分区" 
+                size="default"
+                @change="handleMapCategoryChange"
+                class="map-category-selector"
+                :effect="currentTheme"
+              >
+                <el-option label="全部分区" value="" />
+                <el-option label="生活区" value="生活" />
+                <el-option label="游戏区" value="游戏" />
+                <el-option label="知识区" value="知识" />
+                <el-option label="动漫区" value="动漫" />
+                <el-option label="科技区" value="科技" />
+              </el-select>
             </div>
             <div class="map-container">
-              <v-chart class="map-chart" :option="mapChartOption" />
+              <v-chart class="map-chart" :option="mapChartOption" :theme="currentTheme" :key="currentTheme"/>
             </div>
           </el-card>
         </el-col>
@@ -129,7 +129,7 @@
               <p class="card-header-title">用户活跃度</p>
               <p class="card-header-desc">实时在线用户占比</p>
             </div>
-            <v-chart class="chart" :option="liquidChartOption" />
+            <v-chart class="chart" :option="liquidChartOption" :theme="currentTheme" :key="currentTheme"/>
           </el-card>
 
           <!-- 分区占比饼图 -->
@@ -138,7 +138,7 @@
               <p class="card-header-title">视频分区播放量占比</p>
               <p class="card-header-desc">近24小时数据</p>
             </div>
-            <v-chart class="chart" :option="pieChartOption" @click="handlePieClick" />
+            <v-chart class="chart" :option="pieChartOption" @click="handlePieClick" :theme="currentTheme" :key="currentTheme"/>
           </el-card>
         </el-col>
       </el-row>
@@ -149,6 +149,7 @@
         title="视频详情" 
         :width="400"
         :close-on-click-modal="true"
+        class="video-detail"
       >
         <div class="video-detail-content" v-if="selectedVideo">
           <img :src="selectedVideo.cover" alt="视频封面" class="video-cover">
@@ -183,13 +184,16 @@ import { graphic } from 'echarts/core';
 
 import type { VideoItem, ProvinceData, CategoryData } from '@/stores/chartStore';
 import MyHeader from '@/components/MyHeader.vue';
-
+import { useThemeStore } from '@/stores/themeStore';
 
 use([
   LineChart,BarChart,PieChart,MapChart,
   GridComponent,TooltipComponent,DataZoomComponent,LegendComponent, VisualMapComponent,
   CanvasRenderer
 ])
+
+const currentTheme = computed(()=>useThemeStore().currentTheme)
+// const currentTheme = ref(useThemeStore().currentTheme)
 
 // 注册中国地图
 registerMap('china', chinaMap);
@@ -312,7 +316,7 @@ const pieChartOption = computed((): EChartsOption => ({
   legend: { bottom: 0, left: 'center', textStyle: { fontSize: 12 } },
   series: [{
     type: 'pie',
-    radius: ['40%', '70%'],
+    radius: ['30%', '60%'],
     data: [
       { name: '全部', value: chartStore.categoryData.reduce((s, i) => s + i.value, 0) },
       ...chartStore.categoryData
@@ -386,17 +390,17 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  color: #333;
+  color: var(--text-color);
   padding-bottom: 10px ;
 }
 .card-header-desc {
   font-size: 12px;
-  color: #999;
+  color: var(--secondary-text);
   margin: 4px 0 0;
 }
 .category-tag {
   font-size: 12px;
-  color: #FB7299;
+  color: var(--highlight-color);
   background: rgba(251, 114, 153, 0.1);
   padding: 2px 8px;
   border-radius: 12px;
@@ -407,6 +411,10 @@ onMounted(() => {
   width: 100%;
   flex: 1; /* 图表高度填满卡片剩余空间 */
   min-height: 200px;
+}
+
+:deep(.map-category-selector .el-select__wrapper){
+  background-color: var(--bg-color);
 }
 
 .map-container {
@@ -422,6 +430,12 @@ onMounted(() => {
 
 
 /* 视频详情弹窗 */
+:deep(.video-detail){
+  background-color: var(--bg-color);
+}
+:deep(.video-detail .el-dialog__title) {
+  color: var(--text-color);
+}
 .video-detail-content {
   padding: 8px 0;
 }
@@ -432,10 +446,14 @@ onMounted(() => {
   border-radius: 8px;
 }
 .video-title {
+  color: var(--text-color);
   font-size: 16px;
   margin: 12px 0;
 }
 .label {
-  color: #999;
+  color: var(--highlight-color)
+}
+.video-detail-content p{
+  color: var(--text-color);
 }
 </style>

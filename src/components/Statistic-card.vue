@@ -17,7 +17,7 @@
 
       <!-- 卡片标题 -->
       <div>
-        <div class="card-title" :style="`color: ${titleColor};`">
+        <div class="card-title">
           {{ cardTitle }}
         </div>
         <!-- 数字+单位 -->
@@ -140,5 +140,7 @@ const {
 .growth-down {
   color: #f56c6c; /* 下降-红色 */
 }
-
+.card-title{
+  color:var(--text-color);
+}
 </style>

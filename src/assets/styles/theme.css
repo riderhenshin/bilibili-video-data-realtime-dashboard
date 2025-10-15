@@ -5,15 +5,17 @@
   --card-bg: #ffffff;
   --border-color: #e4e7ed;
   --secondary-text: #606266;
+  --highlight-color:#FB7299;
 }
 
 /* 深色主题 */
 .dark-theme {
   --bg-color: #141414;
   --text-color: #e5e6eb;
-  --card-bg: #202020;
+  --card-bg: #040810;
   --border-color: #303030;
   --secondary-text: #909399;
+  --highlight-color:#FB7299;
 }
 
 /* 应用主题变量 */
@@ -27,11 +29,5 @@ body {
   background-color: var(--card-bg);
   border-color: var(--border-color);
   color: var(--text-color);
-}
-
-
-
-/* 其他需要主题化的组件样式 */
-.update-time, .auto-text {
-  color: var(--secondary-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
