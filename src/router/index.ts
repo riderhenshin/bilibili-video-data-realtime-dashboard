@@ -48,7 +48,10 @@ router.beforeEach((to, from, next) => {
     hasToken ? next() : next('/login');
   } else {
     // 无需登录（登录页）：有token→跳首页，无token→放行
-    hasToken ? next('/') : next();
+    // hasToken ? next('/') : next();
+    // 由于登录页登录后跳转到'/'，即dashboard，
+    // 而dashboard设置为无需登录，触发路由导航守卫，无需登录，有token跳首页，导致无线重定向循环
+    next();
   }
 });
 

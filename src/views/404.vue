@@ -160,19 +160,4 @@
   transform: translateX(4px);
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .nav-bar {
-    padding: 0 16px;
-  }
-  .error-code {
-    font-size: 80px;
-  }
-  .error-message {
-    font-size: 18px;
-  }
-  .error-image {
-    max-width: 400px;
-  }
-}
 </style>

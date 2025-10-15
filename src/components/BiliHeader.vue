@@ -85,7 +85,7 @@ const handleRefresh = async () => {
 
   isRefreshing.value = true;
   try{
-        // 1. 并行获取数据（如果接口之间无依赖）
+    // 1. 并行获取数据（如果接口之间无依赖）
     await Promise.all([
       chartStore.fetchAllData(),
       chartStore.fetchUserActivity()

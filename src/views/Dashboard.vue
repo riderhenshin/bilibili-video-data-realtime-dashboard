@@ -116,7 +116,7 @@
               </p>
             </div>
             <div class="map-container">
-              <v-chart class="map-chart" :option="mapChartOption" @click="handleMapClick" />
+              <v-chart class="map-chart" :option="mapChartOption" />
             </div>
           </el-card>
         </el-col>
@@ -201,41 +201,12 @@ const selectedVideo = ref<VideoItem | null>(null); // 严格指定类型
 
 const currentCategory = ref(''); // 选中的分区（饼图联动）
 const selectedMapCategory = ref(''); // 地图分区筛选
-const mapPopoverVisible = ref(false);
-const currentProvince = ref('');
-const regionTag = ref(''); // 地域特色标签（如“弹幕大省”）
-const provinceStats = ref({ userRatio: 0, uploadCount: 0, barrageCount: 0 });
-const provinceTopVideo = ref<VideoItem | null>(null);
 
 
 // 1. 饼图点击：筛选TOP5视频
 const handlePieClick = (params: any) => {
   if (params.componentType === 'series' && params.name) {
     currentCategory.value = params.name === '全部' ? '' : params.name;
-  }
-};
-
-// 2. 地图点击：显示省份详情
-const handleMapClick = (params: any) => {
-  if (params.componentType === 'series' && params.name) {
-    currentProvince.value = params.name;
-    // 从Store获取省份数据
-    const provinceData = chartStore.provinceData.find(item => item.province === params.name);
-    if (provinceData) {
-      // 提取省份统计数据
-      provinceStats.value = {
-        userRatio: provinceData.userRatio,
-        uploadCount: provinceData.uploadCount,
-        barrageCount: provinceData.barrageCount
-      };
-      // 地域特色标签
-      regionTag.value = getRegionTag(params.name);
-      // TOP1视频
-      provinceTopVideo.value = provinceData.videos
-        .sort((a, b) => b.views - a.views)[0] || null;
-      // 显示弹窗
-      mapPopoverVisible.value = true;
-    }
   }
 };
 
@@ -267,20 +238,6 @@ const handleBarClick = (params: any) => {
 // 工具函数：格式化数字
 const formatNumber = (num: number): string => {
   return num >= 10000 ? `${(num / 10000).toFixed(1)}万` : num.toLocaleString();
-};
-
-// 工具函数：获取地域特色标签
-const getRegionTag = (province: string): string => {
-  type TagMapKey = '广东' | '浙江' | '北京' | '上海' | '四川' | '江苏';
-  const tagMap = {
-    '广东': '弹幕大省',
-    '浙江': '游戏强省',
-    '北京': '知识高地',
-    '上海': '总部所在地',
-    '四川': '动漫之乡',
-    '江苏': '科技先锋'
-  };
-  return tagMap[province as TagMapKey] || '活跃地区';
 };
 
 // 工具函数：按分区筛选视频
