@@ -192,7 +192,8 @@ use([
   CanvasRenderer
 ])
 
-const currentTheme = computed(()=>useThemeStore().currentTheme)
+const themeStore = useThemeStore()
+const currentTheme = computed(()=>themeStore.currentTheme)
 // const currentTheme = ref(useThemeStore().currentTheme)
 
 // 注册中国地图
@@ -346,25 +347,72 @@ const liquidChartOption = computed(() => ({
   }]
 }));
 
-const mapChartOption = computed((): EChartsOption => ({
-  tooltip: { trigger: 'item', formatter: (p: any) => `${p.name}: ${formatNumber(p.value)}` },
+// 组件内定义主题色阶映射
+const themeColorMaps = {
+  light: {
+    // 浅色主题色阶（原配置，保持不变）
+    visualMapColors: [
+      'rgba(0, 161, 214, 0.3)', 
+      'rgba(0, 161, 214, 0.6)', 
+      'rgba(251, 114, 153, 0.6)', 
+      'rgba(251, 114, 153, 0.9)'
+    ],
+    // 浅色主题下NaN区域颜色（原配置）
+    defaultAreaColor: '#f5f5f5',
+    // 省份文字颜色（浅色主题用深色文字）
+    labelColor: '#333'
+  },
+  dark: {
+    // 深色主题色阶（更深的蓝粉渐变，与深色背景协调）
+    visualMapColors: [
+      'rgba(2, 96, 131, 0.5)',   // 深蓝（对应浅色的浅蓝）
+      'rgba(2, 96, 131, 0.8)',   // 深一点的蓝
+      'rgba(255, 99, 132, 0.7)', // 深红粉（对应浅色的浅粉）
+      'rgba(255, 99, 132, 1)'    // 更深的红粉
+    ],
+    // 深色主题下NaN区域颜色（深灰色，与深色背景融合）
+    defaultAreaColor: '#2d2d2d',
+    // 深色主题下省份文字颜色（白色，确保可见）
+    labelColor: '#fff'
+  }
+};
+
+const mapChartOption = computed((): EChartsOption => {
+
+  const currentTheme = themeStore.currentTheme;
+  const { visualMapColors, defaultAreaColor, labelColor } = themeColorMaps[currentTheme];
+  
+  return {
+  tooltip: { 
+    trigger: 'item',
+    formatter: (p: any) => `${p.name}: ${formatNumber(p.value)}`,
+      // 优化tooltip样式（可选，确保深色主题下可见）
+      backgroundColor: currentTheme === 'dark' ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+      textStyle: { color: currentTheme === 'dark' ? '#fff' : '#333' }
+   },
   visualMap: {
     min: 100000,
     max: 1000000,
     inRange: {
-      color: ['rgba(0, 161, 214, 0.3)', 'rgba(0, 161, 214, 0.6)', 'rgba(251, 114, 153, 0.6)', 'rgba(251, 114, 153, 0.9)']
+     color: visualMapColors // 动态色阶
     },
     text: ['高', '低'],
-    calculable: true
+    calculable: true,
+    // 优化visualMap文字颜色（与主题匹配）
+    textStyle: { color: labelColor }
   },
   series: [{
     type: 'map',
     map: 'china',
     data: getMapDataByCategory(),
-    label: { show: true, fontSize: 10 },
-    itemStyle: { areaColor: '#f5f5f5', borderColor: '#fff' },
+    label: { show: true, fontSize: 10,color: labelColor },
+    itemStyle: {
+       areaColor: defaultAreaColor, // 动态默认区域颜色（NaN值区域）
+      borderColor: currentTheme === 'dark' ? '#444' : '#fff' // 动态边框颜色
+    },
   }]
-}));
+  }
+});
 
 // 初始化数据
 onMounted(() => {
