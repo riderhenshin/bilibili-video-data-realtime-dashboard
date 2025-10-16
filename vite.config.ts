@@ -10,7 +10,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base:'/data-realtime-dashboard-online/',
+  base:'/bilibili-video-data-realtime-dashboard/',
   plugins: [
     vue(),
     vueDevTools(),
